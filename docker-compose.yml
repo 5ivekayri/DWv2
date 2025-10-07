@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+  django:
+    image: python:3.11-slim
+    working_dir: /app
+    volumes:
+      - ./:/app
+    command: bash -c "pip install --no-cache-dir django djangorestframework django-redis mysqlclient && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    environment:
+      DJANGO_SETTINGS_MODULE: backend.settings
+      DJANGO_SECRET_KEY: change-me
+      DB_ENGINE: django.db.backends.mysql
+      DB_NAME: weather
+      DB_USER: weather
+      DB_PASSWORD: weather
+      DB_HOST: mysql
+      DB_PORT: 3306
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+      - mysql
+
+  redis:
+    image: redis:7
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+
+  mysql:
+    image: mysql:8
+    environment:
+      MYSQL_DATABASE: weather
+      MYSQL_USER: weather
+      MYSQL_PASSWORD: weather
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+volumes:
+  mysql-data:
