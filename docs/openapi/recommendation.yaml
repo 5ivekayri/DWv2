@@ -1,0 +1,54 @@
+openapi: 3.1.0
+info:
+  title: Dark Weather API
+  version: "2.0"
+paths:
+  /api/recommendation:
+    get:
+      summary: Clothing recommendation for given coordinates
+      description: |
+        Returns a short clothing recommendation for the requested location.
+        Responses are cached in Redis for 45 minutes and requests are limited to 20 per hour per client IP.
+      parameters:
+        - in: query
+          name: lat
+          description: Latitude in decimal degrees
+          required: true
+          schema:
+            type: number
+            format: float
+        - in: query
+          name: lon
+          description: Longitude in decimal degrees
+          required: true
+          schema:
+            type: number
+            format: float
+      responses:
+        "200":
+          description: Recommendation successfully generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recommendation:
+                    type: string
+                    description: Short clothing tip
+                  source:
+                    type: string
+                    enum: [openrouter, fallback]
+                    description: Whether the answer came from OpenRouter or fallback rules
+                  lat:
+                    type: number
+                  lon:
+                    type: number
+        "400":
+          description: Invalid or missing coordinates
+        "429":
+          description: Rate limit exceeded (20 requests per hour per IP)
+        "503":
+          description: Upstream LLM temporarily unavailable
+      tags:
+        - recommendation
+components: {}
