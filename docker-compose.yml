@@ -1,0 +1,39 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: dark_weather
+      MYSQL_USER: dw
+      MYSQL_PASSWORD: dw
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+    command: ["mosquitto", "-c", "/mosquitto-no-auth.conf"]
+
+  mqtt-consumer:
+    image: python:3.11-slim
+    depends_on:
+      - mysql
+      - mosquitto
+    environment:
+      PYTHONUNBUFFERED: "1"
+      DATABASE_URL: mysql+pymysql://dw:dw@mysql:3306/dark_weather
+      MQTT_HOST: mosquitto
+    working_dir: /app
+    volumes:
+      - ./:/app
+    command: ["/app/scripts/run_mqtt_consumer.sh"]
+
+volumes:
+  mysql_data:
