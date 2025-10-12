@@ -18,6 +18,39 @@
 - **LLM:** OpenRouter
 - **DevOps:** Docker Compose, Traefik/Caddy, GitHub Actions
 
+## 🚀 Быстрый старт для разработки
+1. Создайте и активируйте виртуальное окружение Python 3.12:
+   ```bash
+   python3.12 -m venv .venv
+   source .venv/bin/activate
+   ```
+2. Установите инструменты разработки:
+   ```bash
+   pip install -r requirements-dev.txt
+   ```
+3. Настройте `pre-commit` (один раз на машину):
+   ```bash
+   pre-commit install
+   ```
+
+## ✅ Проверка качества кода
+- Линтеры и форматтеры (ruff, black, isort):
+  ```bash
+  ruff check .
+  black --check .
+  isort --check-only .
+  ```
+- Тесты:
+  ```bash
+  pytest
+  ```
+
+Эти же проверки запускает GitHub Actions в workflow [`ci.yml`](.github/workflows/ci.yml).
+
+## 📚 Документация
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — описание архитектуры и ссылки на диаграммы.
+- `docs/diagrams/` — исходники диаграмм (Mermaid/PlantUML и т.п.).
+
 ## 📂 Репозиторий
 - `backend/` — Django API + Core Logic
 - `frontend/` — React SPA
