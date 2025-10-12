@@ -1,52 +1,64 @@
+"""Lightweight HTTP client compatible with the subset of `requests` we need."""
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, Optional
+import json
+from typing import Any, Dict, Optional
 
 
 class RequestException(Exception):
-    """Base exception for the lightweight requests shim."""
+    """Base exception for HTTP request errors."""
 
 
-class Timeout(RequestException):
-    """Raised when an operation times out."""
+class HTTPError(RequestException):
+    def __init__(self, response: "Response") -> None:
+        super().__init__(f"HTTP {response.status_code}")
+        self.response = response
 
 
 class Response:
-    def __init__(self, status_code: int = 200, json_data: Any = None, text: str | None = None) -> None:
+    def __init__(
+        self,
+        status_code: int,
+        content: bytes,
+        headers: Optional[Dict[str, str]] = None,
+        url: str | None = None,
+    ) -> None:
         self.status_code = status_code
-        self._json_data = json_data
-        self.text = text if text is not None else ("" if json_data is None else str(json_data))
+        self._content = content
+        self.headers = headers or {}
+        self.url = url or ""
+
+    @property
+    def content(self) -> bytes:
+        return self._content
 
     def json(self) -> Any:
-        if self._json_data is None:
-            raise ValueError("No JSON data set on response")
-        return self._json_data
+        if not self._content:
+            return None
+        return json.loads(self._content.decode("utf-8"))
+
+    def raise_for_status(self) -> None:
+        if 400 <= self.status_code:
+            raise HTTPError(self)
 
 
-class Session:
-    transport: Optional[Callable[..., Response]] = None
-
-    def __init__(self) -> None:
-        self._adapters: Dict[str, Any] = {}
-
-    def mount(self, prefix: str, adapter: Any) -> None:  # pragma: no cover - compatibility
-        self._adapters[prefix] = adapter
-
-    def request(self, method: str, url: str, timeout: Optional[float] = None, **kwargs) -> Response:
-        if Session.transport is None:
-            raise RequestException("No HTTP transport configured")
-        return Session.transport(method=method.upper(), url=url, timeout=timeout, **kwargs)
+from .sessions import Session  # noqa: E402  (import after class definitions)
 
 
-class adapters:  # pragma: no cover - namespace shim
-    class HTTPAdapter:
-        def __init__(self, max_retries: Any = None) -> None:
-            self.max_retries = max_retries
+def request(method: str, url: str, **kwargs: Any) -> Response:
+    with Session() as session:
+        return session.request(method, url, **kwargs)
+
+
+def post(url: str, **kwargs: Any) -> Response:
+    return request("POST", url, **kwargs)
 
 
 __all__ = [
-    "Session",
-    "Response",
     "RequestException",
-    "Timeout",
+    "HTTPError",
+    "Response",
+    "Session",
+    "request",
+    "post",
 ]
