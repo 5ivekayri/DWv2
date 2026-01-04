@@ -3,3 +3,4 @@ isort==5.13.2
 pre-commit==3.7.1
 pytest==8.2.2
 ruff==0.5.4
+requests-mock>=1.11,<2.0

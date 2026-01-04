@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import urllib.error
+import urllib.parse
 import urllib.request
 from typing import Any, Dict, Optional
 
@@ -9,17 +10,27 @@ from . import HTTPError, RequestException, Response
 
 
 class Session:
+    transport = None
+
     def request(
         self,
         method: str,
         url: str,
         *,
         headers: Optional[Dict[str, str]] = None,
+        params: Optional[Dict[str, Any]] = None,
         json: Any = None,
         data: bytes | None = None,
         timeout: Optional[float] = None,
     ) -> Response:
         method = method.upper()
+        if params:
+            query = urllib.parse.urlencode(params)
+            delimiter = "&" if "?" in url else "?"
+            url = f"{url}{delimiter}{query}"
+        transport = getattr(self, "transport", None)
+        if transport:
+            return transport(method=method, url=url, timeout=timeout)
         payload = data
         request_headers = dict(headers or {})
         if json is not None:
@@ -36,6 +47,9 @@ class Session:
             raise HTTPError(response) from None
         except urllib.error.URLError as exc:  # pragma: no cover - network not hit in tests
             raise RequestException(str(exc)) from exc
+
+    def get(self, url: str, **kwargs: Any) -> Response:
+        return self.request("GET", url, **kwargs)
 
     def close(self) -> None:  # pragma: no cover - nothing to clean up
         return None

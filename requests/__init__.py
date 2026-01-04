@@ -19,14 +19,26 @@ class Response:
     def __init__(
         self,
         status_code: int,
-        content: bytes,
+        content: bytes | str | None = None,
         headers: Optional[Dict[str, str]] = None,
         url: str | None = None,
+        json_data: Any | None = None,
+        text: str | None = None,
     ) -> None:
         self.status_code = status_code
-        self._content = content
+        if json_data is not None and content is None:
+            content = json.dumps(json_data).encode("utf-8")
+        if text is not None and content is None:
+            content = text
+        if isinstance(content, str):
+            content = content.encode("utf-8")
+        self._content = content or b""
         self.headers = headers or {}
         self.url = url or ""
+        try:
+            self.text = self._content.decode("utf-8")
+        except Exception:  # pragma: no cover - fallback for unexpected types
+            self.text = ""
 
     @property
     def content(self) -> bytes:

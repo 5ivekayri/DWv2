@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from typing import Iterable, List
 
 import logging
+import os
 
 from django.core.cache.backends.base import BaseCache
 
@@ -33,6 +34,7 @@ class WeatherServiceBridge(WeatherService):
         self._providers: List[WeatherProvider] = list(providers)
         self._cache = cache
         self._ttl = ttl
+        self._testing_mode = os.environ.get("TESTING_MODE", "0") == "1"
 
     def get_weather(self, latitude: float, longitude: float) -> WeatherPoint:
         cache_key = self.cache_key_template.format(lat=latitude, lon=longitude)
@@ -50,6 +52,8 @@ class WeatherServiceBridge(WeatherService):
                 continue
 
             self._cache.set(cache_key, self._serialize(point), self._ttl)
+            if self._testing_mode:
+                logger.info("Provider %s returned weather data", point.source)
             return point
 
         raise WeatherServiceError("All weather providers failed") from (errors[0] if errors else None)
@@ -69,5 +73,6 @@ class WeatherServiceBridge(WeatherService):
             pressure_hpa=payload["pressure_hpa"],
             wind_speed_ms=payload["wind_speed_ms"],
             precipitation_mm=payload["precipitation_mm"],
+            source=payload["source"],
             observed_at=observed_at,
         )

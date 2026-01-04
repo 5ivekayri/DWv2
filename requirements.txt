@@ -5,3 +5,4 @@ paho-mqtt>=1.6,<2.0
 pydantic>=1.10,<2.0
 SQLAlchemy>=1.4,<3.0
 PyMySQL>=1.0
+requests>=2.31,<3.0

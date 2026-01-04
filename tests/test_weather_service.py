@@ -23,6 +23,7 @@ class _DummyProvider(WeatherProvider):
             pressure_hpa=1010.0,
             wind_speed_ms=2.0,
             precipitation_mm=0.1,
+            source=self.name,
             observed_at=datetime.now(tz=timezone.utc),
         )
 
