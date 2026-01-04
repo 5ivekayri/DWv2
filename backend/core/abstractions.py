@@ -16,6 +16,7 @@ class WeatherPoint:
     pressure_hpa: float
     wind_speed_ms: float
     precipitation_mm: float
+    source: str
     observed_at: datetime
 
 

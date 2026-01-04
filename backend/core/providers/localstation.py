@@ -21,5 +21,6 @@ class LocalStationProvider(WeatherProvider):
             pressure_hpa=1013.0,
             wind_speed_ms=3.5,
             precipitation_mm=0.0,
+            source=self.name,
             observed_at=datetime.now(tz=timezone.utc),
         )

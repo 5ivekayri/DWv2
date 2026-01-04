@@ -29,13 +29,13 @@ class _Transport:
         status_code: int = 200,
         text: str | None = None,
     ) -> None:
-        response = requests.Response(status_code=status_code, json_data=json, text=text)
+        response = requests.Response(status_code=status_code, json_data=json, text=text, url=url)
         self._responses.append(_RegisteredResponse(method=method.upper(), url=url, response=response))
 
     def __call__(self, *, method: str, url: str, timeout: Optional[float] = None, **kwargs) -> requests.Response:
         self.call_count += 1
         for registered in self._responses:
-            if registered.method == method and registered.url == url:
+            if registered.method == method and (registered.url == url or url.startswith(f"{registered.url}?")):
                 return registered.response
         raise AssertionError(f"No mock registered for {method} {url}")
 
